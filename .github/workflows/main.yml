@@ -19,4 +19,5 @@ jobs:
       - name: Run mlflow project
         env:
           DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
-        run: mlflow run MLProject/ --no-conda
+        # Perbaikan: Menghapus flag --no-conda untuk menghindari error
+        run: mlflow run MLProject/
