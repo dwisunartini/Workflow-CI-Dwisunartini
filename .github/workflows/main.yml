@@ -1,23 +1,38 @@
 name: Basic Workflow CI
+
 on:
   push:
-    branches: [ main ]
+    branches: [ main ] # Trigger aktif saat ada push ke branch main
+
 jobs:
   train:
     runs-on: ubuntu-latest
     steps:
       - name: Set up job
-        run: echo "Starting Basic CI..."
+        run: echo "Initializing Basic Workflow..."
+
       - name: Run actions/checkout@v3
         uses: actions/checkout@v3
+
       - name: Set up Python 3.12.7
         uses: actions/setup-python@v4
         with:
           python-version: '3.12.7'
+
+      - name: Check Env
+        run: python --version
+
       - name: Install dependencies
-        run: pip install mlflow dagshub pandas scikit-learn matplotlib
+        run: |
+          pip install mlflow dagshub pandas scikit-learn matplotlib
+
       - name: Run mlflow project
         env:
-          DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
-        # Perbaikan: Menghapus flag --no-conda untuk menghindari error
-        run: mlflow run MLProject/
+          DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }} # Menggunakan Secret untuk keamanan
+        run: |
+          mlflow run MLProject/ --no-conda
+
+      - name: Get latest MLflow run_id
+        run: |
+          # Perintah untuk mengambil run_id terbaru guna kebutuhan tahap Skilled/Advance nantinya
+          echo "RUN_ID=$(mlflow runs list --experiment-id 0 | head -n 3 | tail -n 1 | awk '{print $1}')" >> $GITHUB_ENV
