@@ -2,7 +2,7 @@ name: Basic Workflow CI
 
 on:
   push:
-    branches: [ main ] # Trigger otomatis saat push ke branch main
+    branches: [ main ] # Trigger otomatis saat push
 
 jobs:
   train:
@@ -26,9 +26,9 @@ jobs:
       - name: Run mlflow project
         env:
           DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
-        # Perbaikan: Menggunakan perintah run standar tanpa flag yang menyebabkan error
+        # Menggunakan --env-manager local agar tidak mencoba membuat conda baru di GitHub Actions
         run: |
-          mlflow run MLProject/
+          mlflow run MLProject/ --env-manager local
 
       - name: Get latest MLflow run_id
         run: |
