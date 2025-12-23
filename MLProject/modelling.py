@@ -1,14 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[1]:
-
-
-get_ipython().system('pip install -q pandas mlflow dagshub scikit-learn matplotlib')
-
-
-# In[2]:
-
 
 import mlflow
 
@@ -16,10 +5,6 @@ import mlflow
 mlflow.set_tracking_uri(None) 
 mlflow.sklearn.autolog(disable=True) # Matikan dulu
 mlflow.sklearn.autolog() # Nyalakan ulang secara bersih
-
-
-# In[3]:
-
 
 import pandas as pd
 import mlflow
@@ -56,9 +41,6 @@ def train_basic():
 
 if __name__ == "__main__":
     train_basic()
-
-
-# In[ ]:
 
 
 
