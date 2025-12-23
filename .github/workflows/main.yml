@@ -2,15 +2,12 @@ name: Basic Workflow CI
 
 on:
   push:
-    branches: [ main ] # Trigger aktif saat ada push ke branch main
+    branches: [ main ] # Trigger otomatis saat push ke branch main
 
 jobs:
   train:
     runs-on: ubuntu-latest
     steps:
-      - name: Set up job
-        run: echo "Initializing Basic Workflow..."
-
       - name: Run actions/checkout@v3
         uses: actions/checkout@v3
 
@@ -28,11 +25,11 @@ jobs:
 
       - name: Run mlflow project
         env:
-          DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }} # Menggunakan Secret untuk keamanan
+          DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
+        # Perbaikan: Menggunakan perintah run standar tanpa flag yang menyebabkan error
         run: |
-          mlflow run MLProject/ --no-conda
+          mlflow run MLProject/
 
       - name: Get latest MLflow run_id
         run: |
-          # Perintah untuk mengambil run_id terbaru guna kebutuhan tahap Skilled/Advance nantinya
           echo "RUN_ID=$(mlflow runs list --experiment-id 0 | head -n 3 | tail -n 1 | awk '{print $1}')" >> $GITHUB_ENV
