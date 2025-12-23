@@ -1,0 +1,22 @@
+name: Basic Workflow CI
+on:
+  push:
+    branches: [ main ]
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up job
+        run: echo "Starting Basic CI..."
+      - name: Run actions/checkout@v3
+        uses: actions/checkout@v3
+      - name: Set up Python 3.12.7
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12.7'
+      - name: Install dependencies
+        run: pip install mlflow dagshub pandas scikit-learn matplotlib
+      - name: Run mlflow project
+        env:
+          DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
+        run: mlflow run MLProject/ --no-conda
