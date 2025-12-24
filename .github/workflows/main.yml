@@ -1,4 +1,4 @@
-name: Skilled Workflow CI
+name: Basic and Skilled Workflow CI
 
 on:
   push:
@@ -8,12 +8,14 @@ jobs:
   train:
     runs-on: ubuntu-latest
     steps:
+      - name: Set up job
+        run: echo "Starting Combined CI Pipeline..."
 
-      - name: Run actions/checkout@v4 # Disarankan upgrade ke v4 juga
+      - name: Run actions/checkout@v4
         uses: actions/checkout@v4
 
       - name: Set up Python 3.12.7
-        uses: actions/setup-python@v5 # Disarankan upgrade ke v5
+        uses: actions/setup-python@v5
         with:
           python-version: '3.12.7'
 
@@ -21,18 +23,27 @@ jobs:
         run: python --version
 
       - name: Install dependencies
-        run: pip install mlflow dagshub pandas scikit-learn matplotlib
+        run: |
+          pip install mlflow dagshub pandas scikit-learn matplotlib
 
       - name: Run mlflow project
         env:
           DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
-        run: mlflow run MLProject/ --env-manager local
+        # Kriteria Basic: Melakukan training otomatis
+        run: |
+          mlflow run MLProject/ --env-manager local
+
+      - name: Get latest MLflow run_id
+        run: |
+          # Mengambil ID untuk persiapan tahap Advance nanti
+          echo "RUN_ID=$(mlflow runs list --experiment-id 0 | head -n 3 | tail -n 1 | awk '{print $1}')" >> $GITHUB_ENV
 
       - name: Upload to GitHub
-        uses: actions/upload-artifact@v4 # PERBAIKAN: Gunakan v4 untuk menghindari error deprecation
+        uses: actions/upload-artifact@v4
         with:
           name: model-artifacts
-          path: mlruns/ # Menyimpan artefak ke repositori (Syarat Skilled)
+          path: mlruns/
+        # Kriteria Skilled: Menyimpan artefak ke repositori
 
       - name: Complete job
-        run: echo "Skilled Workflow Finished!"
+        run: echo "Basic & Skilled Stages Finished!"
