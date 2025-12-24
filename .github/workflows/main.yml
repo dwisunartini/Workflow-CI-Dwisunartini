@@ -27,21 +27,29 @@ jobs:
           pip install mlflow dagshub pandas scikit-learn matplotlib
 
       - name: Run mlflow project
-        # Memastikan mlflow berjalan di lingkungan lokal agar mlruns tercipta di root runner
         run: |
           mlflow run MLProject/ --env-manager local
 
-      - name: Get latest MLflow run_id
-        # Kita cari folder UUID secara mendalam di semua kemungkinan lokasi
+      - name: Commit and Push MLruns to Repository
+        # Langkah ini akan mengirim folder mlruns ke daftar file GitHub Anda secara otomatis
         run: |
-          # Cari folder yang mengandung meta.yaml dan ambil nama folder induknya (ID)
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add mlruns/
+          # Jika mlruns ada di subfolder, sesuaikan jalurnya
+          git add MLProject/mlruns/ || true 
+          git commit -m "Add model artifacts from latest run" || echo "No changes to commit"
+          git push
+
+      - name: Get latest MLflow run_id
+        # Karena file sudah menetap, kita cari ID-nya dengan pasti
+        run: |
+          # Cari file meta.yaml untuk mendapatkan ID folder asli
           SEARCH_PATH=$(find . -name "meta.yaml" | grep "mlruns/0/" | head -n 1)
           ID=$(basename $(dirname $SEARCH_PATH))
           FULL_PATH=$(dirname $SEARCH_PATH)
-          
           echo "RUN_ID=$ID" >> $GITHUB_ENV
           echo "MODEL_PATH=$FULL_PATH/artifacts/model" >> $GITHUB_ENV
-          echo "Ditemukan ID: $ID pada path: $FULL_PATH"
 
       - name: Install Python dependencies
         run: pip install --upgrade pip
@@ -55,12 +63,12 @@ jobs:
             MLProject/mlruns/
             
       - name: Build Docker Model
-        # Sekarang kita gunakan MODEL_PATH yang sudah divalidasi
+        # Sekarang path ini dijamin ada karena sudah di-push ke repo
         run: |
           mlflow models build-docker \
             -m "${{ env.MODEL_PATH }}" \
             -n "${{ secrets.DOCKERHUB_USERNAME }}/mlflow-model:latest" \
-            --enable-mlserver    
+            --enable-mlserver   
 
       - name: Log in to Docker Hub
         # Login otomatis menggunakan Secrets yang sudah Anda buat
