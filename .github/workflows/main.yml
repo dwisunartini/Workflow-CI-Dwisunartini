@@ -49,7 +49,7 @@ jobs:
             mlruns/
             MLProject/mlruns/
             
-       - name: Build Docker Model
+      - name: Build Docker Model
         # Menggunakan BASE_DIR dan RUN_ID yang divalidasi dari langkah sebelumnya
         run: |
           mlflow models build-docker \
