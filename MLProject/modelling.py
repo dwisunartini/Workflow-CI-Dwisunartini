@@ -6,27 +6,28 @@ from sklearn.ensemble import RandomForestRegressor
 import os
 
 def train():
-    data_path = 'examscore_preprocessing_automate.csv'
+    # Reset tracking ke folder lokal untuk menghindari error database SQLite di CI
+    mlflow.set_tracking_uri(f"file:///{os.getcwd()}/mlruns")
     
+    data_path = 'examscore_preprocessing_automate.csv'
     if not os.path.exists(data_path):
         print(f"Error: File {data_path} tidak ditemukan!")
         return
-        
-    mlflow.end_run()
 
     df = pd.read_csv(data_path)
     X = df.drop(columns=['exam_score'])
     y = df['exam_score']
-
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
+    # Gunakan autolog agar semua metrik terekam otomatis
     mlflow.sklearn.autolog()
 
-    
     model = RandomForestRegressor(n_estimators=50, random_state=42)
     model.fit(X_train, y_train)
     
+    # Simpan model secara eksplisit ke folder 'model'
     mlflow.sklearn.log_model(model, "model")
+    print("Training berhasil disimpan di folder mlruns lokal.")
 
 if __name__ == "__main__":
     train()
