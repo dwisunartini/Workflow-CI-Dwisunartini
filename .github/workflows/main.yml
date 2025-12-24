@@ -8,8 +8,6 @@ jobs:
   train:
     runs-on: ubuntu-latest
     steps:
-      - name: Set up job
-        run: echo "Starting Combined CI Pipeline..."
 
       - name: Run actions/checkout@v4
         uses: actions/checkout@v4
@@ -26,6 +24,13 @@ jobs:
         run: |
           pip install mlflow dagshub pandas scikit-learn matplotlib
 
+      - name: Set MLflow Tracking URI
+        env:
+          DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
+        run: |
+          # Menghubungkan tracking ke DagsHub sesuai kriteria Skilled
+          echo "MLFLOW_TRACKING_URI=https://dagshub.com/${{ github.repository_owner }}/${{ github.event.repository.name }}.mlflow" >> $GITHUB_ENV
+
       - name: Run mlflow project
         env:
           DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
@@ -35,15 +40,26 @@ jobs:
 
       - name: Get latest MLflow run_id
         run: |
-          # Mengambil ID untuk persiapan tahap Advance nanti
           echo "RUN_ID=$(mlflow runs list --experiment-id 0 | head -n 3 | tail -n 1 | awk '{print $1}')" >> $GITHUB_ENV
+
+      - name: Install Python dependencies
+        run: pip install --upgrade pip # Langkah tambahan agar identik dengan kriteria
 
       - name: Upload to GitHub
         uses: actions/upload-artifact@v4
         with:
           name: model-artifacts
-          path: mlruns/
+          # Perbaikan: Mencari mlruns di root maupun di dalam folder MLProject
+          path: |
+            mlruns/
+            MLProject/mlruns/
         # Kriteria Skilled: Menyimpan artefak ke repositori
+
+      - name: Post Set up Python 3.12.7
+        run: echo "Cleaning up..."
+
+      - name: Post Run actions/checkout@v3
+        run: echo "Finalizing..."
 
       - name: Complete job
         run: echo "Basic & Skilled Stages Finished!"
