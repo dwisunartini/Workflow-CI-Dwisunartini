@@ -11,6 +11,8 @@ def train():
     if not os.path.exists(data_path):
         print(f"Error: File {data_path} tidak ditemukan!")
         return
+        
+    mlflow.end_run()
 
     df = pd.read_csv(data_path)
     X = df.drop(columns=['exam_score'])
