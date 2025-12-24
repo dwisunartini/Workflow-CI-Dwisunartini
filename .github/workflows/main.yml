@@ -17,28 +17,23 @@ jobs:
         with:
           python-version: '3.12.7'
 
+      - name: Check Env
+        run: python --version
+
       - name: Install dependencies
         run: |
           pip install mlflow dagshub pandas scikit-learn matplotlib
 
       - name: Run mlflow project
         run: |
-          # Jalankan mlflow dan pastikan mlruns tercipta di root
           mlflow run MLProject/ --env-manager local
 
       - name: Get latest MLflow run_id
-        # Perbaikan pencarian folder UUID agar tidak kosong
+        # PERBAIKAN: Mencari folder UUID terbaru di mlruns/0 agar RUN_ID tidak kosong
         run: |
-          # Cari folder UUID di root atau di dalam MLProject
-          if [ -d "mlruns/0" ]; then 
-            BASE_DIR="mlruns"
-          else 
-            BASE_DIR="MLProject/mlruns"
-          fi
-          LATEST_RUN=$(ls -t $BASE_DIR/0 | grep -v "meta.yaml" | head -n 1)
+          LATEST_RUN=$(ls -t mlruns/0 | grep -v "meta.yaml" | head -n 1)
           echo "RUN_ID=$LATEST_RUN" >> $GITHUB_ENV
-          echo "BASE_PATH=$BASE_DIR" >> $GITHUB_ENV
-          echo "Ditemukan ID: $LATEST_RUN di folder: $BASE_DIR"
+          echo "Ditemukan ID: $LATEST_RUN"
 
       - name: Install Python dependencies
         run: pip install --upgrade pip
@@ -47,15 +42,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: model-artifacts
-          path: |
-            mlruns/
-            MLProject/mlruns/
+          path: mlruns/
 
       - name: Build Docker Model
-        # Menggunakan path hasil deteksi otomatis agar tidak error Errno 2
+        # PERBAIKAN: Path model sekarang menggunakan RUN_ID yang sudah terdeteksi
         run: |
           mlflow models build-docker \
-            -m "${{ env.BASE_PATH }}/0/${{ env.RUN_ID }}/artifacts/model" \
+            -m "mlruns/0/${{ env.RUN_ID }}/artifacts/model" \
             -n "${{ secrets.DOCKERHUB_USERNAME }}/mlflow-model:latest" \
             --enable-mlserver
 
@@ -70,4 +63,5 @@ jobs:
 
       - name: Push Docker Image
         # Mengirim ke Docker Hub dwisunartini
-        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/mlflow-model:latest
+        run: |
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/mlflow-model:latest
