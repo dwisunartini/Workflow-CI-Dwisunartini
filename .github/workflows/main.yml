@@ -1,4 +1,4 @@
-name: Skilled Workflow CI
+name: Advance Workflow CI
 
 on:
   push:
@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Set up job
-        run: echo "Starting Pipeline..."
+        run: echo "Starting Advance Pipeline..."
 
       - name: Run actions/checkout@v4
         uses: actions/checkout@v4
@@ -27,27 +27,52 @@ jobs:
           pip install mlflow dagshub pandas scikit-learn matplotlib
 
       - name: Run mlflow project
-        # Kita hapus MLFLOW_TRACKING_URI DagsHub di sini agar stabil secara lokal
+        # Memastikan mlflow berjalan di lingkungan lokal agar mlruns tercipta di root runner
         run: |
           mlflow run MLProject/ --env-manager local
+
+      - name: Get latest MLflow run_id
+        # Mencari folder UUID terbaru di mlruns/0 agar path build-docker tidak kosong
+        run: |
+          LATEST_RUN=$(ls -t mlruns/0 | grep -v "meta.yaml" | head -n 1)
+          echo "RUN_ID=$LATEST_RUN" >> $GITHUB_ENV
+          echo "Ditemukan ID Model: $LATEST_RUN"
 
       - name: Install Python dependencies
         run: pip install --upgrade pip
 
       - name: Upload to GitHub
+        # Menyimpan artefak 12.8 MB yang sudah berhasil Anda buat sebelumnya
         uses: actions/upload-artifact@v4
         with:
           name: model-artifacts
-          # Mengambil folder mlruns dari subfolder maupun root
-          path: |
-            mlruns/
-            MLProject/mlruns/
+          path: mlruns/
+
+      - name: Build Docker Model
+        # Membungkus model menjadi image menggunakan ID yang baru saja dideteksi
+        run: |
+          mlflow models build-docker \
+            -m "mlruns/0/${{ env.RUN_ID }}/artifacts/model" \
+            -n "${{ secrets.DOCKERHUB_USERNAME }}/mlflow-model:latest" \
+            --enable-mlserver
+
+      - name: Log in to Docker Hub
+        # Login otomatis menggunakan Secrets yang sudah Anda buat
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Tag Docker Image
+        run: docker tag ${{ secrets.DOCKERHUB_USERNAME }}/mlflow-model:latest ${{ secrets.DOCKERHUB_USERNAME }}/mlflow-model:v1
+
+      - name: Push Docker Image
+        # Mengirim image model ke repositori Docker Hub 'dwisunartini'
+        run: |
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/mlflow-model:latest
 
       - name: Post Set up Python 3.12.7
         run: echo "Done."
 
-      - name: Post Run actions/checkout@v3
-        run: echo "Done."
-
       - name: Complete job
-        run: echo "Skilled Stage Finished!"
+        run: echo "Advance Workflow Finished! Model is on Docker Hub."
