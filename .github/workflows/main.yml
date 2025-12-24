@@ -32,11 +32,16 @@ jobs:
           mlflow run MLProject/ --env-manager local
 
       - name: Get latest MLflow run_id
-        # Mencari folder UUID terbaru di mlruns/0 agar path build-docker tidak kosong
+        # Kita cari folder UUID secara mendalam di semua kemungkinan lokasi
         run: |
-          LATEST_RUN=$(ls -t mlruns/0 | grep -v "meta.yaml" | head -n 1)
-          echo "RUN_ID=$LATEST_RUN" >> $GITHUB_ENV
-          echo "Ditemukan ID Model: $LATEST_RUN"
+          # Cari folder yang mengandung meta.yaml dan ambil nama folder induknya (ID)
+          SEARCH_PATH=$(find . -name "meta.yaml" | grep "mlruns/0/" | head -n 1)
+          ID=$(basename $(dirname $SEARCH_PATH))
+          FULL_PATH=$(dirname $SEARCH_PATH)
+          
+          echo "RUN_ID=$ID" >> $GITHUB_ENV
+          echo "MODEL_PATH=$FULL_PATH/artifacts/model" >> $GITHUB_ENV
+          echo "Ditemukan ID: $ID pada path: $FULL_PATH"
 
       - name: Install Python dependencies
         run: pip install --upgrade pip
@@ -50,12 +55,12 @@ jobs:
             MLProject/mlruns/
             
       - name: Build Docker Model
-        # Menggunakan BASE_DIR dan RUN_ID yang divalidasi dari langkah sebelumnya
+        # Sekarang kita gunakan MODEL_PATH yang sudah divalidasi
         run: |
           mlflow models build-docker \
-            -m "${{ env.BASE_DIR }}/${{ env.RUN_ID }}/artifacts/model" \
+            -m "${{ env.MODEL_PATH }}" \
             -n "${{ secrets.DOCKERHUB_USERNAME }}/mlflow-model:latest" \
-            --enable-mlserver     
+            --enable-mlserver    
 
       - name: Log in to Docker Hub
         # Login otomatis menggunakan Secrets yang sudah Anda buat
