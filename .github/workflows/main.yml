@@ -1,4 +1,4 @@
-name: Basic Workflow CI
+name: Skilled Workflow CI
 
 on:
   push:
@@ -8,28 +8,22 @@ jobs:
   train:
     runs-on: ubuntu-latest
     steps:
+      - name: Set up job
+        run: echo "Starting CI..."
       - name: Run actions/checkout@v3
         uses: actions/checkout@v3
-
       - name: Set up Python 3.12.7
         uses: actions/setup-python@v4
         with:
           python-version: '3.12.7'
-
-      - name: Check Env
-        run: python --version
-
       - name: Install dependencies
-        run: |
-          pip install mlflow dagshub pandas scikit-learn matplotlib
-
+        run: pip install mlflow dagshub pandas scikit-learn matplotlib
       - name: Run mlflow project
-        env:
-          DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
-        # Gunakan --env-manager local untuk mencegah error aktivasi conda
-        run: |
-          mlflow run MLProject/ --env-manager local
-
-      - name: Get latest MLflow run_id
-        run: |
-          echo "RUN_ID=$(mlflow runs list --experiment-id 0 | head -n 3 | tail -n 1 | awk '{print $1}')" >> $GITHUB_ENV
+        run: mlflow run MLProject/ --env-manager local
+      - name: Upload to GitHub
+        uses: actions/upload-artifact@v3
+        with:
+          name: model-artifacts
+          path: mlruns/ # Menyimpan artefak model
+      - name: Complete job
+        run: echo "Skilled Workflow Finished!"
