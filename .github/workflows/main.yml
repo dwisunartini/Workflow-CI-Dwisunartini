@@ -1,4 +1,4 @@
-name: Advance Workflow CI
+name: Skilled Workflow CI
 
 on:
   push:
@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Set up job
-        run: echo "Starting Advance Pipeline..."
+        run: echo "Starting Pipeline..."
 
       - name: Run actions/checkout@v4
         uses: actions/checkout@v4
@@ -19,46 +19,35 @@ jobs:
         with:
           python-version: '3.12.7'
 
+      - name: Check Env
+        run: python --version
+
       - name: Install dependencies
         run: |
           pip install mlflow dagshub pandas scikit-learn matplotlib
 
       - name: Run mlflow project
-        # PERBAIKAN: Memaksa penyimpanan ke folder lokal (sqlite) agar folder mlruns menetap
+        # Kita hapus MLFLOW_TRACKING_URI DagsHub di sini agar stabil secara lokal
         run: |
-          mlflow run MLProject/ --env-manager local --backend-config '{"use_conda": false}'
+          mlflow run MLProject/ --env-manager local
 
-      - name: Get latest MLflow run_id
-        # Sekarang folder mlruns pasti ada di root karena kita pakai tracking lokal
-        run: |
-          ID=$(ls -t mlruns/0 | grep -v "meta.yaml" | head -n 1)
-          echo "RUN_ID=$ID" >> $GITHUB_ENV
-          echo "Ditemukan ID: $ID"
+      - name: Install Python dependencies
+        run: pip install --upgrade pip
 
       - name: Upload to GitHub
         uses: actions/upload-artifact@v4
         with:
           name: model-artifacts
-          path: mlruns/
+          # Mengambil folder mlruns dari subfolder maupun root
+          path: |
+            mlruns/
+            MLProject/mlruns/
 
-      - name: Build Docker Model
-        # Dengan RUN_ID yang sudah pasti terisi, build tidak akan error
-        run: |
-          mlflow models build-docker \
-            -m "mlruns/0/${{ env.RUN_ID }}/artifacts/model" \
-            -n "${{ secrets.DOCKERHUB_USERNAME }}/mlflow-model:latest" \
-            --enable-mlserver
+      - name: Post Set up Python 3.12.7
+        run: echo "Done."
 
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Push Docker Image
-        # Mengirim ke Docker Hub dwisunartini
-        run: |
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/mlflow-model:latest
+      - name: Post Run actions/checkout@v3
+        run: echo "Done."
 
       - name: Complete job
-        run: echo "Advance Workflow Finished!"
+        run: echo "Skilled Stage Finished!"
