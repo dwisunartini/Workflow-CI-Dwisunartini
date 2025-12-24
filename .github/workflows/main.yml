@@ -40,13 +40,14 @@ jobs:
 
       - name: Install Python dependencies
         run: pip install --upgrade pip
-
+        
       - name: Upload to GitHub
-        # Menyimpan artefak 12.8 MB yang sudah berhasil Anda buat sebelumnya
         uses: actions/upload-artifact@v4
         with:
           name: model-artifacts
-          path: mlruns/
+          path: |
+            mlruns/
+            MLProject/mlruns/
 
       - name: Build Docker Model
         # Membungkus model menjadi image menggunakan ID yang baru saja dideteksi
