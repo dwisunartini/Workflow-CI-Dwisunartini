@@ -66,22 +66,16 @@ jobs:
 
       - name: Find Model and Build Docker
         run: |
-          # Aktifkan globstar untuk pencarian folder mendalam
-          shopt -s globstar
-          
-          # Berdasarkan gambar Anda, kita cari folder model di dalam MLProject/mlruns
-          # Kita gunakan path yang sangat luas agar tidak meleset
-          MODEL_PATH=$(ls -d **/artifacts/model/ | head -n 1)
+          MODEL_PATH=$(ls -td MLProject/mlruns/0/models/*/artifacts | head -n 1)
           
           echo "Path model ditemukan di: $MODEL_PATH"
           
           if [ -z "$MODEL_PATH" ]; then
-            echo "Error: Folder model tetap tidak ditemukan!"
-            echo "Isi folder MLProject/mlruns/0 adalah:"
-            ls -R MLProject/mlruns/0
+            echo "Error: Folder artifacts tidak ditemukan!"
             exit 1
           fi
 
+          # Build Docker menggunakan path folder artifacts tersebut
           mlflow models build-docker \
             -m "$MODEL_PATH" \
             -n "${{ secrets.DOCKERHUB_USERNAME }}/mlflow-model:latest" \
