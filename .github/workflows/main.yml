@@ -49,16 +49,13 @@ jobs:
             mlruns/
             MLProject/mlruns/
             
-      - name: Build Docker Model
-        # Kita tambahkan pengecekan folder sebelum build untuk memastikan path
+       - name: Build Docker Model
+        # Menggunakan BASE_DIR dan RUN_ID yang divalidasi dari langkah sebelumnya
         run: |
-          echo "Mengecek folder: mlruns/0/${{ env.RUN_ID }}/artifacts/model"
-          ls -R mlruns/0/${{ env.RUN_ID }}/artifacts/model
-          
           mlflow models build-docker \
-            -m "mlruns/0/${{ env.RUN_ID }}/artifacts/model" \
+            -m "${{ env.BASE_DIR }}/${{ env.RUN_ID }}/artifacts/model" \
             -n "${{ secrets.DOCKERHUB_USERNAME }}/mlflow-model:latest" \
-            --enable-mlserver
+            --enable-mlserver     
 
       - name: Log in to Docker Hub
         # Login otomatis menggunakan Secrets yang sudah Anda buat
