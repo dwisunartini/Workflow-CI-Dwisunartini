@@ -67,11 +67,15 @@ jobs:
       - name: Find Model and Build Docker
         # Mencari folder model secara paksa di semua subfolder
         run: |
-          MODEL_PATH=$(find . -path "*/artifacts/model" -type d | head -n 1)
+          # Berdasarkan gambar Anda, path-nya adalah:
+          # MLProject / mlruns / 0 / (ID-MODEL) / artifacts / model
+          
+          # Kita gunakan pencarian yang lebih dalam agar pasti ketemu
+          MODEL_PATH=$(find MLProject/mlruns/0 -name "model" -type d | grep "artifacts/model" | head -n 1)
           echo "Path model ditemukan di: $MODEL_PATH"
           
           if [ -z "$MODEL_PATH" ]; then
-            echo "Error: Folder model tetap tidak ditemukan!"
+            echo "Error: Folder model tetap tidak ditemukan di MLProject/mlruns!"
             exit 1
           fi
 
