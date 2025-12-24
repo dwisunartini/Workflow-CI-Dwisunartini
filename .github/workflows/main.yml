@@ -42,6 +42,3 @@ jobs:
 
       - name: Post Set up Python 3.12.7
         run: echo "Done."
-
-      - name: Complete job
-        run: echo "Skilled Stage Finished!"
