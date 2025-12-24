@@ -7,6 +7,8 @@ on:
 jobs:
   train:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Set up job
         run: echo "Starting Advance Pipeline..."
@@ -63,22 +65,20 @@ jobs:
             MLProject/mlruns/
 
       - name: Find Model and Build Docker
-        # Langkah ini menggabungkan pencarian path dan build dalam satu blok agar aman
+        # Mencari folder model secara paksa di semua subfolder
         run: |
-          # Cari lokasi folder 'model' yang sebenarnya di dalam folder artifacts
-          MODEL_PATH=$(find . -name "model" | grep "artifacts/model" | head -n 1)
+          MODEL_PATH=$(find . -path "*/artifacts/model" -type d | head -n 1)
           echo "Path model ditemukan di: $MODEL_PATH"
           
           if [ -z "$MODEL_PATH" ]; then
-            echo "Error: Folder model tidak ditemukan!"
+            echo "Error: Folder model tetap tidak ditemukan!"
             exit 1
           fi
 
-          # Jalankan build menggunakan path yang sudah ditemukan secara otomatis
           mlflow models build-docker \
             -m "$MODEL_PATH" \
             -n "${{ secrets.DOCKERHUB_USERNAME }}/mlflow-model:latest" \
-            --enable-mlserver  
+            --enable-mlserver
 
       - name: Log in to Docker Hub
         # Login otomatis menggunakan Secrets yang sudah Anda buat
