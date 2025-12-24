@@ -9,21 +9,29 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Set up job
-        run: echo "Starting CI..."
-      - name: Run actions/checkout@v3
-        uses: actions/checkout@v3
+        run: echo "Starting Skilled Pipeline..."
+
+      - name: Run actions/checkout@v4 # Disarankan upgrade ke v4 juga
+        uses: actions/checkout@v4
+
       - name: Set up Python 3.12.7
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5 # Disarankan upgrade ke v5
         with:
           python-version: '3.12.7'
+
       - name: Install dependencies
         run: pip install mlflow dagshub pandas scikit-learn matplotlib
+
       - name: Run mlflow project
+        env:
+          DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
         run: mlflow run MLProject/ --env-manager local
+
       - name: Upload to GitHub
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4 # PERBAIKAN: Gunakan v4 untuk menghindari error deprecation
         with:
           name: model-artifacts
-          path: mlruns/ # Menyimpan artefak model
+          path: mlruns/ # Menyimpan artefak ke repositori (Syarat Skilled)
+
       - name: Complete job
         run: echo "Skilled Workflow Finished!"
