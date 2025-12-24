@@ -27,7 +27,7 @@ def train():
     mlflow.sklearn.log_model(model, "model")
 
 if __name__ == "__main__":
-    train())
+    train()
 
 
 
