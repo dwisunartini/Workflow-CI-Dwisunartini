@@ -8,8 +8,6 @@ jobs:
   train:
     runs-on: ubuntu-latest
     steps:
-      - name: Set up job
-        run: echo "Starting Pipeline..."
 
       - name: Run actions/checkout@v4
         uses: actions/checkout@v4
@@ -27,7 +25,6 @@ jobs:
           pip install mlflow dagshub pandas scikit-learn matplotlib
 
       - name: Run mlflow project
-        # Kita hapus MLFLOW_TRACKING_URI DagsHub di sini agar stabil secara lokal
         run: |
           mlflow run MLProject/ --env-manager local
 
@@ -44,9 +41,6 @@ jobs:
             MLProject/mlruns/
 
       - name: Post Set up Python 3.12.7
-        run: echo "Done."
-
-      - name: Post Run actions/checkout@v3
         run: echo "Done."
 
       - name: Complete job
