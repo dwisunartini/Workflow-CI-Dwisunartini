@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-      - name: Run actions/checkout@v4 # Gunakan v4 untuk stabilitas
+      - name: Run actions/checkout@v4
         uses: actions/checkout@v4
 
       - name: Set up Python 3.12.7
@@ -21,26 +21,32 @@ jobs:
         run: python --version
 
       - name: Install dependencies
-        run: pip install mlflow dagshub pandas scikit-learn matplotlib
+        run: |
+          pip install mlflow dagshub pandas scikit-learn matplotlib
 
       - name: Run mlflow project
-        run: mlflow run MLProject/ --env-manager local
+        run: |
+          mlflow run MLProject/ --env-manager local
 
       - name: Get latest MLflow run_id
+        # Dibutuhkan untuk mencari folder model secara otomatis
         run: |
           echo "RUN_ID=$(mlflow runs list --experiment-id 0 | head -n 3 | tail -n 1 | awk '{print $1}')" >> $GITHUB_ENV
 
       - name: Install Python dependencies
         run: pip install --upgrade pip
 
-      - name: Upload to Google Drive
-        # Tetap pakai v4 agar tidak error 'deprecated'
-        uses: actions/upload-artifact@v4 
+      - name: Upload to GitHub
+        # Menggunakan v4 sesuai kesuksesan di tahap Skilled
+        uses: actions/upload-artifact@v4
         with:
           name: model-artifacts
-          path: mlruns/
+          path: |
+            mlruns/
+            MLProject/mlruns/
 
       - name: Build Docker Model
+        # Membungkus model menjadi image Docker
         run: |
           mlflow models build-docker \
             -m "mlruns/0/${{ env.RUN_ID }}/artifacts/model" \
@@ -48,6 +54,7 @@ jobs:
             --enable-mlserver
 
       - name: Log in to Docker Hub
+        # Menggunakan kredensial dari GitHub Secrets
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -57,13 +64,12 @@ jobs:
         run: docker tag ${{ secrets.DOCKERHUB_USERNAME }}/mlflow-model:latest ${{ secrets.DOCKERHUB_USERNAME }}/mlflow-model:v1
 
       - name: Push Docker Image
-        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/mlflow-model:latest
-
-      - name: Post Log in to Docker Hub
-        run: echo "Success push to Docker Hub"
+        # Mengirim image ke repositori Docker Hub Anda
+        run: |
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/mlflow-model:latest
 
       - name: Post Set up Python 3.12.7
-        run: echo "Cleaning up..."
+        run: echo "Done."
 
       - name: Post Run actions/checkout@v3
-        run: echo "Finalizing..."
+        run: echo "Done."
