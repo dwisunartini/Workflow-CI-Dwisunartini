@@ -1,0 +1,10 @@
+artifact_location: file:////home/runner/work/Workflow-CI-Dwisunartini/Workflow-CI-Dwisunartini/MLProject/mlruns/0/models/m-8b18d36875f84215ab0c098550ff8120/artifacts
+creation_timestamp: 1766566985452
+experiment_id: '0'
+last_updated_timestamp: 1766566988361
+model_id: m-8b18d36875f84215ab0c098550ff8120
+model_type: null
+name: model
+source_run_id: null
+status: 2
+status_message: null
